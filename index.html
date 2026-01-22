@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>chatwdmi</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; padding: 24px; }
+      .box { max-width: 520px; margin: 0 auto; }
+      input, button { font-size: 16px; padding: 10px 12px; }
+      input { width: 100%; box-sizing: border-box; margin: 8px 0; }
+      button { width: 100%; cursor: pointer; }
+      #chat { display:none; margin-top: 16px; }
+      #log { border: 1px solid #ddd; padding: 12px; height: 360px; overflow:auto; border-radius: 8px; }
+      #msg { margin-top: 8px; display:flex; gap:8px; }
+      #text { flex:1; }
+      .sys { color:#666; font-style: italic; }
+      .me { font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div id="join">
+        <h2 style="margin: 0 0 6px 0;">Enter OTP</h2>
+        <input id="code" placeholder="e.g. 100" inputmode="numeric" />
+        <input id="name" placeholder="Your name" />
+        <button id="joinBtn">Join chat</button>
+        <p style="color:#777; font-size: 13px; margin-top: 10px;">
+          If the code is valid, you’ll enter a 1:1 chat room for that code.
+        </p>
+      </div>
+
+      <div id="chat">
+        <h3 style="margin: 0 0 10px 0;">Chat</h3>
+        <div id="log"></div>
+        <div id="msg">
+          <input id="text" placeholder="Type a message..." />
+          <button id="sendBtn" style="width:120px;">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let ws = null;
+      let myName = "";
+
+      function addLine(html, cls="") {
+        const div = document.createElement("div");
+        if (cls) div.className = cls;
+        div.innerHTML = html;
+        const log = document.getElementById("log");
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function wsUrl() {
+        const proto = location.protocol === "https:" ? "wss" : "ws";
+        return `${proto}://${location.host}/ws`;
+      }
+
+      function join() {
+        const code = document.getElementById("code").value.trim();
+        myName = document.getElementById("name").value.trim() || "Guest";
+
+        ws = new WebSocket(wsUrl());
+
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ type: "join", code, name: myName }));
+          document.getElementById("join").style.display = "none";
+          document.getElementById("chat").style.display = "block";
+          addLine(`<span class="sys">Connected. Room code: ${code}</span>`, "sys");
+        };
+
+        ws.onmessage = (ev) => {
+          const data = JSON.parse(ev.data);
+
+          if (data.type === "error") {
+            alert(data.message);
+            ws.close();
+            location.reload();
+            return;
+          }
+
+          if (data.type === "system") {
+            addLine(`<span class="sys">${data.message}</span>`, "sys");
+          }
+
+          if (data.type === "chat") {
+            const who = (data.name === myName) ? `<span class="me">You</span>` : `<b>${data.name}</b>`;
+            addLine(`${who}: ${escapeHtml(data.text)}`);
+          }
+        };
+
+        ws.onclose = () => addLine(`<span class="sys">Disconnected</span>`, "sys");
+      }
+
+      function send() {
+        const textEl = document.getElementById("text");
+        const text = textEl.value.trim();
+        if (!text || !ws || ws.readyState !== 1) return;
+        ws.send(JSON.stringify({ type: "chat", text }));
+        textEl.value = "";
+        textEl.focus();
+      }
+
+      function escapeHtml(s) {
+        return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      }
+
+      document.getElementById("joinBtn").onclick = join;
+      document.getElementById("sendBtn").onclick = send;
+      document.getElementById("text").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") send();
+      });
+    </script>
+  </body>
+</html>
