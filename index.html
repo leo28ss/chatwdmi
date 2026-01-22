@@ -31,7 +31,7 @@
       </div>
 
       <div id="chat">
-        <h3 style="margin: 0 0 10px 0;">Chat</h3>
+        <h3 style="margin: 0 0 10px 0;">🔒 You’re connected. This Speaku is private.</h3>
         <div id="log"></div>
         <div id="msg">
           <input id="text" placeholder="Type a message..." />
@@ -68,7 +68,7 @@
           ws.send(JSON.stringify({ type: "join", code, name: myName }));
           document.getElementById("join").style.display = "none";
           document.getElementById("chat").style.display = "block";
-          addLine(`<span class="sys">Connected. Room code: ${code}</span>`, "sys");
+          addLine(`<span class="sys">Speaku code: ${code}</span>`, "sys");
         };
 
         ws.onmessage = (ev) => {
