@@ -16,6 +16,33 @@
       #text { flex:1; }
       .sys { color:#666; font-style: italic; }
       .me { font-weight: 600; }
+      .msg {
+  margin: 6px 0;
+  max-width: 75%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  line-height: 1.4;
+}
+
+.msg.me {
+  margin-left: auto;
+  background: #dcf8c6;
+  text-align: right;
+}
+
+.msg.other {
+  margin-right: auto;
+  background: #f1f1f1;
+}
+
+.msg.sys {
+  margin: 8px auto;
+  background: none;
+  color: #777;
+  font-style: italic;
+  text-align: center;
+}
+
     </style>
   </head>
   <body>
@@ -58,14 +85,15 @@ codeInput.addEventListener("input", updateJoinState);
 nameInput.addEventListener("input", updateJoinState);
 
 
-      function addLine(html, cls="") {
-        const div = document.createElement("div");
-        if (cls) div.className = cls;
-        div.innerHTML = html;
-        const log = document.getElementById("log");
-        log.appendChild(div);
-        log.scrollTop = log.scrollHeight;
-      }
+function addLine(html, cls = "") {
+  const div = document.createElement("div");
+  div.className = `msg ${cls}`.trim();
+  div.innerHTML = html;
+  const log = document.getElementById("log");
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
 
       function wsUrl() {
         const proto = location.protocol === "https:" ? "wss" : "ws";
@@ -82,7 +110,7 @@ nameInput.addEventListener("input", updateJoinState);
           ws.send(JSON.stringify({ type: "join", code, name: myName }));
           document.getElementById("join").style.display = "none";
           document.getElementById("chat").style.display = "block";
-          addLine(`<span class="sys">Speaku code: ${code}</span>`, "sys");
+          addLine(`Speaku code: ${code}`, "sys");
         };
 
         ws.onmessage = (ev) => {
@@ -96,13 +124,15 @@ nameInput.addEventListener("input", updateJoinState);
           }
 
           if (data.type === "system") {
-            addLine(`<span class="sys">${data.message}</span>`, "sys");
+            addLine(data.message, "sys");
           }
 
-          if (data.type === "chat") {
-            const who = (data.name === myName) ? `<span class="me">You</span>` : `<b>${data.name}</b>`;
-            addLine(`${who}: ${escapeHtml(data.text)}`);
-          }
+if (data.type === "chat") {
+  const isMe = data.name === myName;
+  const cls = isMe ? "me" : "other";
+  const who = isMe ? "You" : data.name;
+  addLine(`<strong>${who}</strong><br>${escapeHtml(data.text)}`, cls);
+}
         };
 
         ws.onclose = () => addLine(`<span class="sys">Disconnected</span>`, "sys");
