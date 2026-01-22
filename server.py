@@ -15,15 +15,18 @@ rooms: Dict[str, Set[WebSocket]] = {}
 # websocket -> name
 names: Dict[WebSocket, str] = {}
 
-@app.get("/", response_class=HTMLResponse)
-def index():
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+from fastapi.responses import FileResponse
+from pathlib import Path
 
-@app.get("/host", response_class=HTMLResponse)
-def host_page():
-    with open("static/host.html", "r", encoding="utf-8") as f:
-        return f.read()
+BASE_DIR = Path(__file__).resolve().parent
+
+@app.get("/")
+def index():
+    return FileResponse(BASE_DIR / "index.html")
+
+@app.get("/host")
+def host():
+    return FileResponse(BASE_DIR / "host.html")
 
 
 
