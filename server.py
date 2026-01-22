@@ -1,6 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from typing import Dict, Set
 import json
 
@@ -26,7 +25,6 @@ def host_page():
     with open("static/host.html", "r", encoding="utf-8") as f:
         return f.read()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 async def broadcast(code: str, payload: dict):
