@@ -24,12 +24,6 @@ BASE_DIR = Path(__file__).resolve().parent
 def index():
     return FileResponse(BASE_DIR / "index.html")
 
-@app.get("/host")
-def host():
-    return FileResponse(BASE_DIR / "host.html")
-
-
-
 async def broadcast(code: str, payload: dict):
     msg = json.dumps(payload)
     for ws in list(rooms.get(code, set())):
